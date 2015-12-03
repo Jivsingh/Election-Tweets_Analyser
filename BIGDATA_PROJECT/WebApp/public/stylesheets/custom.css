@@ -1,0 +1,17 @@
+.right {
+	float: right;
+}
+
+.img-circle {
+	height: 30px !important;
+	width: 30px !important;
+}
+
+.heatmap-button {
+	width: 100%;
+}
+
+.heatmap-button-div {
+	text-align: center;
+	padding-bottom: 5px;
+}
