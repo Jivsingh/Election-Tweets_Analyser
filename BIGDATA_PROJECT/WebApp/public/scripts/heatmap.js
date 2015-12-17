@@ -184,6 +184,18 @@ function initHeatMapTemp() {
         // DivelemQuery.innerHTML = data;
     });
 
+    socket.on('NewsLinks', function(data) {
+        var DivelemQuery1 = document.getElementById('Title');
+        var DivelemQuery2 = document.getElementById('Link');
+        var DivelemQuery3 = document.getElementById('Sentiment');
+        var DivelemQuery4 = document.getElementById('Concepts');
+        console.log(data.concepts);
+        DivelemQuery1.innerHTML = data.title_link.toString();
+        DivelemQuery2.innerHTML = data.link.toString();
+        DivelemQuery3.innerHTML = data.sentiment.toString();
+        DivelemQuery4.innerHTML = data.concepts.toString();
+    });
+
     socket.on('Sentiment_Users_No', function(data) {
         var chart = AmCharts.makeChart("piechart_3d", {
             "type": "pie",
@@ -245,8 +257,8 @@ function initHeatMapTemp() {
         loadingtoptags(data);
     });
 
-    socket.on('Graph', function(graph) {
-        console.log(graph);
+    socket.on('Graph', function(graph, popularity) {
+        console.log(popularity);
         if (d3) {
             d3.select("#Graphs").select("svg").remove();
         }
@@ -291,13 +303,24 @@ function initHeatMapTemp() {
 
         var node = svg.selectAll(".node")
             .data(graph.nodes)
-            .enter().append("circle")
+            .enter().append("g")
             .attr("class", "node")
-            .attr("r", 5)
+            .call(force.drag);
+
+        var circle = node.append("circle")
+            .attr("r", function(d) {
+                return (popularity[d.group])/32;
+            })
             .style("fill", function(d) {
                 return color(d.group);
             })
-            .call(force.drag);
+
+        node.append("text")
+              .attr("dx", function(d) {
+                return (popularity[d.group])/32;
+            })
+              .attr("dy", ".35em")
+              .text(function(d) { return d.name; });
 
         node.append("title")
             .text(function(d) {
@@ -319,12 +342,14 @@ function initHeatMapTemp() {
                     return d.target.y;
                 });
 
-            node.attr("cx", function(d) {
-                    return d.x;
-                })
-                .attr("cy", function(d) {
-                    return d.y;
-                });
+            // node.attr("cx", function(d) {
+            //         return d.x;
+            //     })
+            //     .attr("cy", function(d) {
+            //         return d.y;
+            //     });
+
+            node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
         });
         // });
 
@@ -613,6 +638,28 @@ function loadingtoptags(freqlist) {
 function querydata(key) {
     socket.emit('Query_tfif', key);
 }
+function newsdata(key){
+    socket.emit('NewsLinks',key);
+}
+function loadcandidate(key){
+
+     if (key == "Hillary Clinton") {
+        document.getElementById("myPerson").src = "images/clinton.jpg";
+    }
+    if (key == "Donald Trump") {
+        document.getElementById("myPerson").src = "images/donald.jpg";
+    }
+    if (key == "Ben Carson") {
+        document.getElementById("myPerson").src = "images/Ben_Carson.jpg";
+    }
+    if (key == "Bernie Sanders") {
+        document.getElementById("myPerson").src = "images/Bernie_Sanders.jpg";
+    }
+    if (key == "Ted Cruz") {
+        document.getElementById("myPerson").src = "images/Ted_Cruz.jpg";
+    }
+
+}
 
 $(document).ready(function() {
     $('#relevanceBtn').click(function() {
@@ -624,12 +671,22 @@ $(document).ready(function() {
             querydata(keyword);
         }
     });
+    $('#LinkBtn').click(function() {
+        console.log('Haha1');
+        var keyword = $('#LinkInput').val();
+        console.log(keyword);
+        if (keyword) {
+            keyword = keyword.trim();
+            newsdata(keyword);
+        }
+    });
 });
 
 function updateTweetData(key) {
     currentKeyword = key;
     loadingimageonkeyword(key);
     //loadingtoptags(key);
+    loadcandidate(key);
     socket.emit('HashTagsByKeyword', key);
     socket.emit('initialTweetsByKeyword', key);
     socket.emit('Sentiment_Users', key);

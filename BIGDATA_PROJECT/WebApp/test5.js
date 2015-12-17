@@ -1,6 +1,51 @@
 var alchemyAPI = require('alchemy-api');
 var alchemy = new alchemyAPI('c6e0f03b20fe21edf6a0dbfd1380f91fd82b157e');
-var text = 'A quarter of a million have signed the Trump petition. What a lovely democratic dilemma. Thanks all. https://t.co/IWE3CnSB04';
+//var text = 'A quarter of a million have signed the Trump petition. What a lovely democratic dilemma. Thanks all. https://t.co/IWE3CnSB04';
+var google = require('google');
+
+google.resultsPerPage = 1
+var nextCounter = 0
+
+google('hillary', function(err, next, links) {
+    if (err) console.error(err)
+    console.log("Total links: " + links.length);
+    for (var i = 0; i < links.length; ++i) {
+        //console.log(links[i].title + ' - ' + links[i].link) // link.href is an alias for link.link 
+        if (links[i].link != null) {
+        	var title = links[i].title.toString();
+            var temp = links[i].link.toString();
+            alchemy.sentiment(temp, {}, (err, result) => {
+                //console.log(result.docSentiment);
+                var sentiment = result.docSentiment;
+                alchemy.concepts(temp, {}, function(err, response) {
+                    if (err) throw err;
+
+                    var points = [];
+                    var concepts = response.concepts;
+
+                    concepts.forEach(function(concept) {
+                        points.push([concept.text]);
+                    });
+                    //console.log(points);
+                    var temp_object = {
+                    	title_link:title,
+                    	link: temp,
+                    	sentiment: sentiment.type,
+                    	concepts:points
+                    }
+                    console.log(temp_object);
+                    // Do something with data
+                });
+            });
+        }
+
+    }
+
+    if (nextCounter < 1) {
+        nextCounter += 1
+        if (next) next()
+    }
+});
 // alchemy.entities(text, {}, function(err, response) {
 //   if (err) throw err;
 
@@ -44,11 +89,11 @@ var text = 'A quarter of a million have signed the Trump petition. What a lovely
 
 
 
-alchemy.concepts(text, {}, function(err, response) {
-  if (err) throw err;
+// alchemy.concepts(text, {}, function(err, response) {
+//     if (err) throw err;
 
-  // See http://www.alchemyapi.com/api/concept/htmlc.html for format of returned object
-  var concepts = response.concepts;
-console.log(concepts);
-  // Do something with data
-});
+//     // See http://www.alchemyapi.com/api/concept/htmlc.html for format of returned object
+//     var concepts = response.concepts;
+//     console.log(concepts);
+//     // Do something with data
+// });

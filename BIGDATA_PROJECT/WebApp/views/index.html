@@ -11,6 +11,15 @@
         stroke-width: 1.5px;
     }
     
+    .node text {
+        display: inline;
+        stroke: #000;
+        stroke-width: 0.5px;
+        fill: #000;
+        font: 12px sans-serif;
+        pointer-events: none;
+    }
+    
     .link {
         stroke: #999;
         stroke-opacity: .6;
@@ -128,6 +137,13 @@
                         </div>
                         <!-- /.info-box -->
                     </div>
+                    <div class="col-md-3 col-sm-6 col-xs-12 left">
+                   
+                    <div class="box-body image-styler">
+                                <img id="myPerson" src="images/election.gif">
+                            </div>
+                    </div>
+                  
                     <!-- /.col -->
                 </div>
                 <!-- /.row -->
@@ -245,7 +261,7 @@
                                 </div>
                             </div>
                             <div class="box-body image-styler">
-                                <img id="myImg" src="images/sanjana.jpg">
+                                <img id="myImg" src="images/Big_data.pngs">
                             </div>
                             <!-- /.box-body -->
                         </div>
@@ -290,60 +306,57 @@
                 <div class="row" style="padding-bottom:20px;">
                     <div class="col-md-12">
                         <div class="box box-info">
-                        <div class= "container-fluid">
-                        <div class="row">
-                        <div class="col-md-12">
-                        <div class="input-group">
-                        
-                            <input type="text" class="form-control" id="relevanceWordInput" placeholder="Search for any word">
-                            <span class="input-group-btn">
+                            <div class="container-fluid">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="relevanceWordInput" placeholder="Search for any word">
+                                            <span class="input-group-btn">
                                 <button class="btn btn-default" type="button" id="relevanceBtn">Go!</button>
                             </span>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div id="Query"></div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            </div>
-                            <div class="row">
-                            <div class="col-md-12"> 
-                            <div id="Query"></div>
-                            </div>
-                            </div>
-                        
-                        </div>
-                       </div>
                         </div>
                     </div>
                 </div>
-                <div class="row">
+                <div class="row" style="padding-bottom:20px;">
                     <div class="col-md-12">
                         <div class="box box-info">
-                            <div class="box-header with-border">
-                                <h3 class="box-title">Tweets</h3>
-                                <div class="box-tools pull-right">
-                                    <button class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
-                                    <button class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+                            <div class="container-fluid">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="LinkInput" placeholder="Search for any word">
+                                            <span class="input-group-btn">
+                                <button class="btn btn-default" type="button" id="LinkBtn">Go!</button>
+                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="container-fluid">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <h4> Title: </h4>
+                                                <h4> Link: </h4>
+                                                <h4>People talking: </h4>
+                                                <h4>The Concepts in that page: </h4>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <h4 id="Title"> </h4>
+                                                <h4 id="Link"></h4>
+                                                <h4 id="Sentiment"> </h4>
+                                                <h4 id="Concepts"> </h4>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <!-- /.box-header -->
-                            <div class="box-body">
-                                <div class="table-responsive" style="overflow: scroll; height: 500px;">
-                                    <table class="table no-margin">
-                                        <thead>
-                                            <tr>
-                                                <th>ID</th>
-                                                <th>Name</th>
-                                                <th>Latitude</th>
-                                                <th>Longitude</th>
-                                                <th>Text</th>
-                                                <th>Keyword</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="tweettable">
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <!-- /.table-responsive -->
-                            </div>
-                            <!-- /.box-body -->
-                            <!-- /.box-footer -->
                         </div>
                     </div>
                 </div>

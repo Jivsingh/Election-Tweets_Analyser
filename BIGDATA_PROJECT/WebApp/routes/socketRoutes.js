@@ -11,6 +11,14 @@ connection.connect(function(err) {
     if (err) console.log(err);
 });
 
+var alchemyAPI = require('alchemy-api');
+var alchemy = new alchemyAPI('c6e0f03b20fe21edf6a0dbfd1380f91fd82b157e');
+//var text = 'A quarter of a million have signed the Trump petition. What a lovely democratic dilemma. Thanks all. https://t.co/IWE3CnSB04';
+var google = require('google');
+
+google.resultsPerPage = 1
+var nextCounter = 0
+
 var natural = require('natural'),
     TfIdf = natural.TfIdf,
     tfidf = new TfIdf();
@@ -29,51 +37,52 @@ module.exports = function(io) {
                 socket.emit('tweetsfromDB', rows);
             }
         });
-         var queryString2 = "SELECT * FROM Politics_3";
-            connection.query(queryString2, function(error, rows) {
-                if (error) {
-                    console.log('Oh no! Error occurred while getting tweets from the DataBase', error);
-                } else {
-                    var map = new HashMap();
-                    for (var i = 0; i < rows.length; i++) {
-                        if (rows[i].hashtags != "[]") {
-                            var temps = JSON.parse(rows[i].hashtags);
-                            temps.forEach(function(temp) {
-                                if (map.has(temp.text.toLowerCase())) {
-                                    map.set(temp.text.toLowerCase(), map.get(temp.text.toLowerCase()) + 1);
-                                } else {
-                                    map.set(temp.text.toLowerCase(), 1);
-                                }
-                            });
-                        }
+        var queryString2 = "SELECT * FROM Politics_3";
+        connection.query(queryString2, function(error, rows) {
+            if (error) {
+                console.log('Oh no! Error occurred while getting tweets from the DataBase', error);
+            } else {
+                var map = new HashMap();
+                for (var i = 0; i < rows.length; i++) {
+                    if (rows[i].hashtags != "[]") {
+                        var temps = JSON.parse(rows[i].hashtags);
+                        temps.forEach(function(temp) {
+                            if (map.has(temp.text.toLowerCase())) {
+                                map.set(temp.text.toLowerCase(), map.get(temp.text.toLowerCase()) + 1);
+                            } else {
+                                map.set(temp.text.toLowerCase(), 1);
+                            }
+                        });
                     }
-                    var data = [];
-                    map.forEach(function(value, key) {
-                        data.push([key, value]);
-                    });
-                    data.sort(function(a, b) {
-                        return a[1] < b[1] ? 1 : a[1] > b[1] ? -1 : 0
-                    });
-                    var points = [];
-                    for (var i = 0; i < data.length; i++) {
-                        var str1 = "#";
-                        if (data[i][1] > 12) {
-                            points.push({
-                                "text": str1.concat(data[i][0]),
-                                "size": 3 * data[i][1]
-                            });
-                        } else if (data[i][1] > 1 && data[i][1] < 12) {
-                            points.push({
-                                "text": str1.concat(data[i][0]),
-                                "size": 6 * data[i][1]
-                            });
-                        }
-
-                    }
-                    console.log(points);
-                    socket.emit('HashTags', points);
                 }
-            });
+                var data = [];
+                map.forEach(function(value, key) {
+                    data.push([key, value]);
+                });
+                data.sort(function(a, b) {
+                    return a[1] < b[1] ? 1 : a[1] > b[1] ? -1 : 0
+                });
+                var points = [];
+                for (var i = 0; i < data.length; i++) {
+                    var str1 = "#";
+                    if (data[i][1] > 12) {
+                        points.push({
+                            "text": str1.concat(data[i][0]),
+                            "size": 3 * data[i][1]
+                        });
+                    } else if (data[i][1] > 1 && data[i][1] < 12) {
+                        points.push({
+                            "text": str1.concat(data[i][0]),
+                            "size": 6 * data[i][1]
+                        });
+                    }
+
+                }
+                console.log(points);
+                socket.emit('HashTags', points);
+            }
+        });
+
         var queryString1 = "SELECT * FROM Politics_3";
         connection.query(queryString1, function(error, rows) {
             if (error) {
@@ -140,7 +149,6 @@ module.exports = function(io) {
                 confusion_matrix[i][j] = 0;
             }
         }
-
         var keyword = "Hillary Clinton";
         var queryString = "SELECT * FROM Politics_3 WHERE keyword ='" + keyword + "'";
         connection.query(queryString, function(error, rows) {
@@ -173,11 +181,11 @@ module.exports = function(io) {
                 }
 
                 console.log(relation_hillary_bernie, relation_hillary_ted, relation_hillary_trump, relation_hillary_ben, total);
-                confusion_matrix[1][0] = relation_hillary_trump;
-                confusion_matrix[1][1] = total;
-                confusion_matrix[1][2] = relation_hillary_bernie;
-                confusion_matrix[1][3] = relation_hillary_ben;
-                confusion_matrix[1][4] = relation_hillary_ted;
+                confusion_matrix[0][0] = total;
+                confusion_matrix[0][1] = relation_hillary_trump;
+                confusion_matrix[0][2] = relation_hillary_bernie;
+                confusion_matrix[0][3] = relation_hillary_ben;
+                confusion_matrix[0][4] = relation_hillary_ted;
             }
         });
         var keyword = "Donald Trump";
@@ -215,11 +223,11 @@ module.exports = function(io) {
                 }
 
                 console.log(relation_trump_bernie, relation_trump_ted, relation_trump_hillary, relation_trump_ben, total);
-                confusion_matrix[0][0] = total;
-                confusion_matrix[0][1] = relation_trump_hillary;
-                confusion_matrix[0][2] = relation_trump_bernie;
-                confusion_matrix[0][3] = relation_trump_ben;
-                confusion_matrix[0][4] = relation_trump_ted;
+                confusion_matrix[1][0] = relation_trump_hillary;
+                confusion_matrix[1][1] = total;
+                confusion_matrix[1][2] = relation_trump_bernie;
+                confusion_matrix[1][3] = relation_trump_ben;
+                confusion_matrix[1][4] = relation_trump_ted;
             }
         });
         var keyword = "Bernie Sanders";
@@ -256,8 +264,8 @@ module.exports = function(io) {
                 }
 
                 console.log(relation_bernie_trump, relation_bernie_ted, relation_bernie_hillary, relation_bernie_ben, total);
-                confusion_matrix[2][0] = relation_bernie_trump;
-                confusion_matrix[2][1] = relation_bernie_hillary;
+                confusion_matrix[2][0] = relation_bernie_hillary;
+                confusion_matrix[2][1] = relation_bernie_trump;
                 confusion_matrix[2][2] = total;
                 confusion_matrix[2][3] = relation_bernie_ben;
                 confusion_matrix[2][4] = relation_bernie_ted;
@@ -297,8 +305,8 @@ module.exports = function(io) {
                     }
                 }
                 console.log(relation_ben_trump, relation_ben_ted, relation_ben_hillary, relation_ben_bernie, total);
-                confusion_matrix[3][0] = relation_ben_trump;
-                confusion_matrix[3][1] = relation_ben_hillary;
+                confusion_matrix[3][0] = relation_ben_hillary;
+                confusion_matrix[3][1] = relation_ben_trump;
                 confusion_matrix[3][2] = relation_ben_bernie;
                 confusion_matrix[3][3] = total;
                 confusion_matrix[3][4] = relation_ben_ted;
@@ -340,8 +348,8 @@ module.exports = function(io) {
 
                 }
                 console.log(relation_ted_trump, relation_ted_ben, relation_ted_hillary, relation_ted_bernie, total);
-                confusion_matrix[4][0] = relation_ted_trump;
-                confusion_matrix[4][1] = relation_ted_hillary;
+                confusion_matrix[4][0] = relation_ted_hillary;
+                confusion_matrix[4][1] = relation_ted_trump;
                 confusion_matrix[4][2] = relation_ted_bernie;
                 confusion_matrix[4][3] = relation_ted_ben;
                 confusion_matrix[4][4] = total;
@@ -358,6 +366,7 @@ module.exports = function(io) {
             }
             //console.log(nodes);
             var links = [];
+            var popularity = [];
             for (var i = 0; i < confusion_matrix.length; i++) {
                 for (var j = 0; j < confusion_matrix.length; j++) {
                     if (i != j) {
@@ -367,14 +376,18 @@ module.exports = function(io) {
                             "value": confusion_matrix[i][j]
                         });
                     }
+                    if(i==j)
+                    {
+                        popularity.push(confusion_matrix[i][j]);
+                    }
                 }
             }
             var temp = {
                 "nodes": nodes,
                 "links": links
             };
-            console.log(temp);
-            socket.emit('Graph', temp);
+            console.log(popularity);
+            socket.emit('Graph', temp ,popularity);
         });
 
         socket.on('initialTweetsByKeyword', function(keyword) {
@@ -394,6 +407,54 @@ module.exports = function(io) {
                     socket.emit('initialTweetsByKeyword', rows);
                 }
             });
+        });
+        socket.on('NewsLinks', function(key) {
+            google(key, function(err, next, links) {
+                if (err) console.error(err)
+                console.log("Total links: " + links.length);
+                var lengthy = links.length;
+                for (var i = 0; i < links.length; ++i) {
+                    //console.log(links[i].title + ' - ' + links[i].link) // link.href is an alias for link.link 
+                    if (links[i].link != null) {
+                        var title = links[i].title.toString();
+                        var temp = links[i].link.toString();
+                        alchemy.sentiment(temp, {}, (err, result) => {
+                            //console.log(result.docSentiment);
+                            var sentiment = result.docSentiment;
+                            alchemy.concepts(temp, {}, function(err, response) {
+                                if (err) throw err;
+
+                                var points = [];
+                                var concepts = response.concepts;
+
+                                concepts.forEach(function(concept) {
+                                    points.push(concept.text);
+                                });
+                                //console.log(points);
+                                var temp_object = {
+                                    title_link: title,
+                                    link: temp,
+                                    sentiment: sentiment.type,
+                                    concepts: points
+                                }
+                                console.log(temp_object);
+                                socket.emit('NewsLinks',temp_object);
+                                // Do something with data
+                            });
+                        });
+                    }
+
+                }
+                if(lengthy == 1)
+                {
+                    lengthy = 2;
+                }
+                if (nextCounter < lengthy) {
+                    nextCounter += 1;
+                    if (next) next()
+                }
+            });
+            nextCounter = 0;
         });
 
         socket.on('HashTagsByKeyword', function(keyword) {
@@ -522,13 +583,13 @@ module.exports = function(io) {
                     //console.log("Cat: ", str);
                     tfidf.addDocument(str);
                     var points = [];
-                    var names = ["Hillary Clinton", "Donald Trump","Bernie Sanders","Ben Carson","Ted Cruz"];
+                    var names = ["Hillary Clinton", "Donald Trump", "Bernie Sanders", "Ben Carson", "Ted Cruz"];
                     tfidf.tfidfs(input, function(i, measure) {
                         console.log('document #' + names[i] + ' is ' + measure);
-                        points.push([names[i],measure]);
+                        points.push([names[i], measure]);
                     });
                     console.log(points);
-                    socket.emit('Query_tfif',points);
+                    socket.emit('Query_tfif', points);
 
                 }
             });

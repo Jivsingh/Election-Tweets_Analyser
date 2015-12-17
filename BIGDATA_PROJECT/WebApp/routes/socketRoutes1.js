@@ -32,7 +32,7 @@ var params = {
     DelaySeconds: 0
 };
 
-// TRACKING
+//TRACKING
 // HtrackItems = ['hillary', 'hillary2016','hillaryclinton','hillary clinton'];
 // var streamHillary = T.stream('statuses/filter', { track: HtrackItems })
 
@@ -55,27 +55,27 @@ var params = {
 //  	liveTweetIntoQueue(temp);
 // });
 
-// DtrackItems = ['donald trump','trump2016','trump', 'donaldtrump'];
-// var streamDonald = T.stream('statuses/filter', { track: DtrackItems })
+DtrackItems = ['donald trump','trump2016','trump', 'donaldtrump'];
+var streamDonald = T.stream('statuses/filter', { track: DtrackItems })
 
-// streamDonald.on('tweet', function (tweet) {	
-// 	var temp = {
-// 		id: tweet.id,
-// 		name:tweet.user.name,
-// 		keyword: 'Donald Trump',
-// 		time: 'DEC 9',
-// 		text :tweet.text,
-// 		favorite_count_tweet: tweet.favorite_count,
-// 		retweet_count_tweet:tweet.retweet_count,
-// 		hashtags: tweet.entities.hashtags,
-// 		favourite_count_user: tweet.user.favourites_count,
-// 		followers_count_user: tweet.user.followers_count,
-// 		friends_count_user: tweet.user.friends_count,
-// 		status_count_user: tweet.user.statuses_count,
-// 		listed_count_user: tweet.user.listed_count
-// 	}
-//   	liveTweetIntoQueue(temp);
-// });
+streamDonald.on('tweet', function (tweet) {	
+	var temp = {
+		id: tweet.id,
+		name:tweet.user.name,
+		keyword: 'Donald Trump',
+		time: 'DEC 9',
+		text :tweet.text,
+		favorite_count_tweet: tweet.favorite_count,
+		retweet_count_tweet:tweet.retweet_count,
+		hashtags: tweet.entities.hashtags,
+		favourite_count_user: tweet.user.favourites_count,
+		followers_count_user: tweet.user.followers_count,
+		friends_count_user: tweet.user.friends_count,
+		status_count_user: tweet.user.statuses_count,
+		listed_count_user: tweet.user.listed_count
+	}
+  	liveTweetIntoQueue(temp);
+});
 
 // BtrackItems = ['ben carson','carson2016', 'RealBenCarson','bencarson'];
 // var streamBCarson = T.stream('statuses/filter', { track: BtrackItems })
@@ -121,27 +121,27 @@ var params = {
 //  liveTweetIntoQueue(temp);
 // });
 
-CruztrackItems = ['ted cruz','cruz2016','tedcruz'];
-var streamTcruz = T.stream('statuses/filter', { track: CruztrackItems })
+// CruztrackItems = ['ted cruz','cruz2016','tedcruz'];
+// var streamTcruz = T.stream('statuses/filter', { track: CruztrackItems })
 
-streamTcruz.on('tweet', function (tweet) {	
-var temp = {
-		id: tweet.id,
-		name:tweet.user.name,
-		keyword: 'Ted Cruz',
-		time: 'DEC 9',
-		text :tweet.text,
-		favorite_count_tweet: tweet.favorite_count,
-		retweet_count_tweet:tweet.retweet_count,
-		hashtags: tweet.entities.hashtags,
-		favourite_count_user: tweet.user.favourites_count,
-		followers_count_user: tweet.user.followers_count,
-		friends_count_user: tweet.user.friends_count,
-		status_count_user: tweet.user.statuses_count,
-		listed_count_user: tweet.user.listed_count
-	}
- liveTweetIntoQueue(temp);
-});
+// streamTcruz.on('tweet', function (tweet) {	
+// var temp = {
+// 		id: tweet.id,
+// 		name:tweet.user.name,
+// 		keyword: 'Ted Cruz',
+// 		time: 'DEC 9',
+// 		text :tweet.text,
+// 		favorite_count_tweet: tweet.favorite_count,
+// 		retweet_count_tweet:tweet.retweet_count,
+// 		hashtags: tweet.entities.hashtags,
+// 		favourite_count_user: tweet.user.favourites_count,
+// 		followers_count_user: tweet.user.followers_count,
+// 		friends_count_user: tweet.user.friends_count,
+// 		status_count_user: tweet.user.statuses_count,
+// 		listed_count_user: tweet.user.listed_count
+// 	}
+//  liveTweetIntoQueue(temp);
+// });
 
 function liveTweetIntoQueue(temp) {
     params.MessageBody =  JSON.stringify(temp);
