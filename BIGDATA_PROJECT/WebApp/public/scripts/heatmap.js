@@ -7,13 +7,7 @@ var mapOne;
 var mapTwo;
 var totalCountDivElem;
 var totalCountDivElem;
-var PositiveHTML;
-var NegativeHTML;
-var NeutralHTML;
-var Verylight;
-var Light;
-var Medium;
-var Heavy;
+
 var currentKeyword = "";
 
 function initHeatMapTemp() {
@@ -27,13 +21,7 @@ function initHeatMapTemp() {
     });
 
     totalCountDivElem = document.getElementById('totalCount');
-    PositiveHTML = document.getElementById('PositiveSentiment');
-    NegativeHTML = document.getElementById('NegativeSentiment');
-    NeutralHTML = document.getElementById('NeutralSentiment');
-    Verylight = document.getElementById('Verylight');
-    Light = document.getElementById('Light');
-    Medium = document.getElementById('Medium');
-    Heavy = document.getElementById('Heavy');
+
 
     var myLatLng = {
         lat: 37.775,
@@ -146,7 +134,57 @@ function initHeatMapTemp() {
         initHeatMap();
     });
 
-    socket.on('Sentiment_Users_No',function(data){
+    socket.on('Query_tfif', function(data) {
+        console.log("The query data", data);
+        var chart = AmCharts.makeChart("Query", {
+            "theme": "light",
+            "type": "serial",
+            "dataProvider": [{
+                "Person": data[0][0],
+                "Relavance": data[0][1]
+            }, {
+                "Person": data[1][0],
+                "Relavance": data[1][1]
+            }, {
+                "Person": data[2][0],
+                "Relavance": data[2][1]
+            }, {
+                "Person": data[3][0],
+                "Relavance": data[3][1]
+            }, {
+                "Person": data[4][0],
+                "Relavance": data[4][1]
+            }],
+            "valueAxes": [{
+                "title": "Relavance"
+            }],
+            "graphs": [{
+                "balloonText": "Income in [[category]]:[[value]]",
+                "fillAlphas": 1,
+                "lineAlpha": 0.2,
+                "title": "Relavance",
+                "type": "column",
+                "valueField": "Relavance"
+            }],
+            "depth3D": 20,
+            "angle": 30,
+            "rotate": true,
+            "categoryField": "Person",
+            "categoryAxis": {
+                "gridPosition": "start",
+                "fillAlpha": 0.05,
+                "position": "left"
+            },
+            "export": {
+                "enabled": true
+            }
+        });
+
+        // var DivelemQuery = document.getElementById('Query');
+        // DivelemQuery.innerHTML = data;
+    });
+
+    socket.on('Sentiment_Users_No', function(data) {
         var chart = AmCharts.makeChart("piechart_3d", {
             "type": "pie",
             "theme": "light",
@@ -182,7 +220,7 @@ function initHeatMapTemp() {
             }, {
                 "User Profile": "Medium Users",
                 "value": data.medium
-            },{
+            }, {
                 "User Profile": "Heavy Users",
                 "value": data.heavy
             }],
@@ -199,75 +237,96 @@ function initHeatMapTemp() {
 
 
     });
+    socket.on('HashTags',function(data){
+        loadingtoptags(data);
+    });
     socket.on('HashTagsByKeyword', function(data) {
-         loadingtoptags(data);
+        console.log(data);
+        loadingtoptags(data);
     });
 
-socket.on('Graph',function(graph){
-   console.log(graph);
-    if(d3)
-    {
-        d3.select("#Graphs").select("svg").remove();
-    }
-    var width = 960,
-    height = 500;
+    socket.on('Graph', function(graph) {
+        console.log(graph);
+        if (d3) {
+            d3.select("#Graphs").select("svg").remove();
+        }
+        var width = 960,
+            height = 500;
 
-var color = d3.scale.category20();
-var max = 0;
-graph.links.forEach(function(link){
-    if(link.value>max)
-    {
-        max = link.value;
-    }
-});
+        var color = d3.scale.category20();
+        var max = 0;
+        graph.links.forEach(function(link) {
+            if (link.value > max) {
+                max = link.value;
+            }
+        });
 
 
-var force = d3.layout.force()
-    .charge(-120)
-    .linkDistance(function(d) {
-        return (max-d.value+1)*2;})
-    .size([width, height]);
+        var force = d3.layout.force()
+            .charge(-120)
+            .linkDistance(function(d) {
+                return (max - d.value + 1) * 2;
+            })
+            .size([width, height]);
 
-var svg = d3.select("#Graphs").append("svg")
-    .attr("width", width)
-    .attr("height", height);
+        var svg = d3.select("#Graphs").append("svg")
+            .attr("width", width)
+            .attr("height", height);
 
-// d3.json("scripts/gh.json", function(error, graph) {
-//   if (error) throw error;
+        // d3.json("scripts/gh.json", function(error, graph) {
+        //   if (error) throw error;
 
-  force
-      .nodes(graph.nodes)
-      .links(graph.links)
-      .start();
+        force
+            .nodes(graph.nodes)
+            .links(graph.links)
+            .start();
 
-  var link = svg.selectAll(".link")
-      .data(graph.links)
-    .enter().append("line")
-      .attr("class", "link")
-      .style("stroke-width", function(d) { return Math.sqrt(d.value); });
+        var link = svg.selectAll(".link")
+            .data(graph.links)
+            .enter().append("line")
+            .attr("class", "link")
+            .style("stroke-width", function(d) {
+                return Math.sqrt(d.value);
+            });
 
-  var node = svg.selectAll(".node")
-      .data(graph.nodes)
-    .enter().append("circle")
-      .attr("class", "node")
-      .attr("r", 5)
-      .style("fill", function(d) { return color(d.group); })
-      .call(force.drag);
+        var node = svg.selectAll(".node")
+            .data(graph.nodes)
+            .enter().append("circle")
+            .attr("class", "node")
+            .attr("r", 5)
+            .style("fill", function(d) {
+                return color(d.group);
+            })
+            .call(force.drag);
 
-  node.append("title")
-      .text(function(d) { return d.name; });
-  
+        node.append("title")
+            .text(function(d) {
+                return d.name;
+            });
 
-  force.on("tick", function() {
-    link.attr("x1", function(d) { return d.source.x; })
-        .attr("y1", function(d) { return d.source.y; })
-        .attr("x2", function(d) { return d.target.x; })
-        .attr("y2", function(d) { return d.target.y; });
 
-    node.attr("cx", function(d) { return d.x; })
-        .attr("cy", function(d) { return d.y; });
-  });
-// });
+        force.on("tick", function() {
+            link.attr("x1", function(d) {
+                    return d.source.x;
+                })
+                .attr("y1", function(d) {
+                    return d.source.y;
+                })
+                .attr("x2", function(d) {
+                    return d.target.x;
+                })
+                .attr("y2", function(d) {
+                    return d.target.y;
+                });
+
+            node.attr("cx", function(d) {
+                    return d.x;
+                })
+                .attr("cy", function(d) {
+                    return d.y;
+                });
+        });
+        // });
 
     });
 
@@ -307,7 +366,7 @@ var svg = d3.select("#Graphs").append("svg")
             }, {
                 "User Profile": "Medium Users",
                 "value": data.medium
-            },{
+            }, {
                 "User Profile": "Heavy Users",
                 "value": data.heavy
             }],
@@ -485,75 +544,93 @@ function initHeatMap() {
         }
     }
 }
-function loadingimageonkeyword(key)
-{
-    if(key == "Hillary Clinton")
-    {
+
+function loadingimageonkeyword(key) {
+    if (key == "Hillary Clinton") {
         document.getElementById("myImg").src = "images/Hillary.png";
     }
-    if(key == "Donald Trump")
-    {
+    if (key == "Donald Trump") {
         document.getElementById("myImg").src = "images/Trump.png";
     }
-    if(key == "Ben Carson")
-    {
+    if (key == "Ben Carson") {
         document.getElementById("myImg").src = "images/Carson.png";
     }
-    if(key == "Bernie Sanders")
-    {
+    if (key == "Bernie Sanders") {
         document.getElementById("myImg").src = "images/Sanders.png";
     }
-    if(key == "Ted Cruz")
-    {
+    if (key == "Ted Cruz") {
         document.getElementById("myImg").src = "images/Ted.png";
     }
-    
+
 }
-function loadingtoptags(freqlist)
-{
-    if(d3)
-    {
+
+function loadingtoptags(freqlist) {
+    if (d3) {
         d3.select("#TopHashTags").select("svg").remove();
     }
     var frequency_list = freqlist;
 
     var color = d3.scale.linear()
-            .domain([0,1,2,3,4,5,6,10,15,20,100])
-            .range(["#ddd", "#ccc", "#bbb", "#aaa", "#999", "#888", "#777", "#666", "#555", "#444", "#333", "#222"]);
+        .domain([0, 1, 2, 3, 4, 5, 6, 10, 15, 20, 100])
+        .range(["#ddd", "#ccc", "#bbb", "#aaa", "#999", "#888", "#777", "#666", "#555", "#444", "#333", "#222"]);
 
     d3.layout.cloud().size([700, 300])
-            .words(frequency_list)
-            .rotate(0)
-            .fontSize(function(d) { return d.size; })
-            .on("end", draw)
-            .start();
+        .words(frequency_list)
+        .rotate(0)
+        .fontSize(function(d) {
+            return d.size;
+        })
+        .on("end", draw)
+        .start();
 
     function draw(words) {
         d3.select("#TopHashTags").append("svg")
-                .attr("width", 850)
-                .attr("height", 350)
-                .attr("class", "wordcloud")
-                .append("g")
-                // without the transform, words words would get cutoff to the left and top, they would
-                // appear outside of the SVG area
-                .attr("transform", "translate(320,200)")
-                .selectAll("text")
-                .data(words)
-                .enter().append("text")
-                .style("font-size", function(d) { return d.size + "px"; })
-                .style("fill", function(d, i) { return color(i); })
-                .attr("transform", function(d) {
-                    return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
-                })
-                .text(function(d) { return d.text; });
-                 }
+            .attr("width", 850)
+            .attr("height", 350)
+            .attr("class", "wordcloud")
+            .append("g")
+            // without the transform, words words would get cutoff to the left and top, they would
+            // appear outside of the SVG area
+            .attr("transform", "translate(320,200)")
+            .selectAll("text")
+            .data(words)
+            .enter().append("text")
+            .style("font-size", function(d) {
+                return d.size + "px";
+            })
+            .style("fill", function(d, i) {
+                return color(i);
+            })
+            .attr("transform", function(d) {
+                return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+            })
+            .text(function(d) {
+                return d.text;
+            });
+    }
 }
+
+function querydata(key) {
+    socket.emit('Query_tfif', key);
+}
+
+$(document).ready(function() {
+    $('#relevanceBtn').click(function() {
+        console.log('Haha');
+        var keyword = $('#relevanceWordInput').val();
+        console.log(keyword);
+        if (keyword) {
+            keyword = keyword.trim();
+            querydata(keyword);
+        }
+    });
+});
 
 function updateTweetData(key) {
     currentKeyword = key;
     loadingimageonkeyword(key);
     //loadingtoptags(key);
-    socket.emit('HashTagsByKeyword',key);
+    socket.emit('HashTagsByKeyword', key);
     socket.emit('initialTweetsByKeyword', key);
     socket.emit('Sentiment_Users', key);
     return false;

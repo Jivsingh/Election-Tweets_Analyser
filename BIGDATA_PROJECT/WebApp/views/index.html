@@ -1,22 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <script src="http://d3js.org/d3.v3.min.js"></script>
-    <script src="scripts/d3.layout.cloud.js"></script>
+<script src="scripts/d3.layout.cloud.js"></script>
+
 <head>
     <meta charset="UTF-8">
     <style>
-
-.node {
-  stroke: #fff;
-  stroke-width: 1.5px;
-}
-
-.link {
-  stroke: #999;
-  stroke-opacity: .6;
-}
-
-</style>
+    .node {
+        stroke: #fff;
+        stroke-width: 1.5px;
+    }
+    
+    .link {
+        stroke: #999;
+        stroke-opacity: .6;
+    }
+    </style>
     <title>{% block title %}Layout Title{% endblock %}</title>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <!-- Tell the browser to be responsive to screen width -->
@@ -35,10 +34,9 @@
     <link rel="stylesheet" href="stylesheets/custom.css">
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/amcharts/3.13.0/amcharts.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/amcharts/3.13.0/pie.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/amcharts/3.13.0/serial.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/amcharts/3.13.0/themes/light.js"></script>
-    
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.7/socket.io.min.js"></script>
-   
     <script src="plugins/jQuery/jQuery-2.1.4.min.js"></script>
     <!-- Bootstrap 3.3.5 -->
     <script src="bootstrap/js/bootstrap.min.js"></script>
@@ -49,7 +47,7 @@
 </head>
 
 <body class="hold-transition skin-blue sidebar-mini">
- <script src="scripts/heatmap.js"></script>
+    <script src="scripts/heatmap.js"></script>
     <div class="wrapper">
         <header class="main-header">
             <!-- Logo -->
@@ -219,7 +217,7 @@
                         </div>
                     </div>
                 </div>
-                 <div class="row">
+                <div class="row">
                     <div class="col-md-12">
                         <div class="box">
                             <div class="box-header with-border">
@@ -246,14 +244,13 @@
                                     <button class="btn btn-box-tool" data-widget="remove" data-toggle="tooltip" title="Remove"><i class="fa fa-times"></i></button>
                                 </div>
                             </div>
-                            <div class="box-body image-styler" >
+                            <div class="box-body image-styler">
                                 <img id="myImg" src="images/sanjana.jpg">
                             </div>
                             <!-- /.box-body -->
                         </div>
                     </div>
                 </div>
-
                 <div class="row">
                     <div class="col-md-12">
                         <div class="box">
@@ -264,11 +261,10 @@
                                     <button class="btn btn-box-tool" data-widget="remove" data-toggle="tooltip" title="Remove"><i class="fa fa-times"></i></button>
                                 </div>
                             </div>
-                           <div>
-    <div id ="TopHashTags" style="text-align:center;">
-    </div>
-
-</div>
+                            <div>
+                                <div id="TopHashTags" style="text-align:center;">
+                                </div>
+                            </div>
                             <!-- /.box-body -->
                         </div>
                     </div>
@@ -283,16 +279,39 @@
                                     <button class="btn btn-box-tool" data-widget="remove" data-toggle="tooltip" title="Remove"><i class="fa fa-times"></i></button>
                                 </div>
                             </div>
-                           <div>
-    <div id ="Graphs" style="text-align:center;">
-    </div>
-
-</div>
+                            <div>
+                                <div id="Graphs" style="text-align:center;">
+                                </div>
+                            </div>
                             <!-- /.box-body -->
                         </div>
                     </div>
                 </div>
-                
+                <div class="row" style="padding-bottom:20px;">
+                    <div class="col-md-12">
+                        <div class="box box-info">
+                        <div class= "container-fluid">
+                        <div class="row">
+                        <div class="col-md-12">
+                        <div class="input-group">
+                        
+                            <input type="text" class="form-control" id="relevanceWordInput" placeholder="Search for any word">
+                            <span class="input-group-btn">
+                                <button class="btn btn-default" type="button" id="relevanceBtn">Go!</button>
+                            </span>
+                            </div>
+                            </div>
+                            <div class="row">
+                            <div class="col-md-12"> 
+                            <div id="Query"></div>
+                            </div>
+                            </div>
+                        
+                        </div>
+                       </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="row">
                     <div class="col-md-12">
                         <div class="box box-info">
