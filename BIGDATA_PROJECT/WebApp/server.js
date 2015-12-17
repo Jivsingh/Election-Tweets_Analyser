@@ -5,16 +5,15 @@ var morgan = require('morgan');
 var bodyParser = require('body-parser');
 var favicon = require('serve-favicon');
 var viewRoutes = require('./routes/viewRoutes');
-//var socketRoutes = require('./routes/socketRoutes');
+var socketRoutes = require('./routes/socketRoutes');
 var swig = require('swig');
 
 var app = express();
 
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
-//socketRoutes.intialTweetsDB(io);
+socketRoutes(io);
 
-//server.post('/', client);
 app.engine('html', swig.renderFile);
 
 app.set('view engine', 'html');

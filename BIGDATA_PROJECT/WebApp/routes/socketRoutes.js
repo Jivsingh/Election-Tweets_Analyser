@@ -1,282 +1,485 @@
-//var worker = require('./consumer');
-
-// TRENDS
-
-var Twit = require('twit');
-var T = new Twit({
-    consumer_key: 'AkE1t4fn5zDgcVOMUBjcT2pzM',
-    consumer_secret: 'vdB1cOrPCbyLtFGL9qaPWyB2uC6RKO5iAoPkSWf3Dx2ctTnjOx',
-    access_token: '3990273435-08DhKM6xhHnjk6zJGcshqKZaD2Re20zxI1TpC2y',
-    access_token_secret: 'SOxFfgLwicGFBnGNIH8nR2JcymKVWWpO5NmaFYz3jkOC8'
-});
-
-data1=[];
-T.get('trends/place', {id: "2459115"}, function(err, data) {
-    if (typeof data === "undefined") {
-      //res.json({status: false});
-    } else {
-      //res.json({trends: data, status: true});
-      for(var i=0;i<10;i++)
-      {
-      console.log(JSON.stringify(data[0].trends[i].name));
-      data1.push(JSON.stringify(data[0].trends[i].name));
-      }
-    }
-  });
-
-
-data2=[];
-T.get('trends/place', {id: "23424975"}, function(err, data) {
-    if (typeof data === "undefined") {
-      //res.json({status: false});
-    } else {
-      //res.json({trends: data, status: true});
-      for(var i=0;i<10;i++)
-      {
-      console.log(JSON.stringify(data[0].trends[i].name));
-      data2.push(JSON.stringify(data[0].trends[i].name));
-      }
-    }
-  });
-
-
-// AWS CONFIGURATION
-var aws = require('aws-sdk');
-var accessKeyId = 'AKIAJXXZENDMN4TCYO2A';
-var secretAccessKey = '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';
-var awsRegion = 'us-west-2';
-
-// SQS CONFIGURATION
-var sqs;
-var aysnc = require('async');
-var queueURL = 'https://sqs.us-west-2.amazonaws.com/239427429364/TweetsQueue';
-
-// ALCHEMY API CONFIGURATION
-var alchemyAPI = require('alchemy-api');
-var alchemy = new alchemyAPI('a8143b4a4d3e7c19c92c90cac8232537a7b7c23c');
-
-// AWS
-aws.config.update({
-    accessKeyId: accessKeyId,
-    secretAccessKey: secretAccessKey,
-    region: awsRegion
-});
-
-// SQS
-sqs = new aws.SQS();
-var params = {
-    QueueUrl: queueURL,
-    DelaySeconds: 1
-};
-
-// SNS
-var sns = new aws.SNS();
- var snspublishParams = { 
-    TopicArn : "arn:aws:sns:us-west-2:239427429364:tweeter", 
-     Message: "Success"
- };
-
-// WORKER POOL
-var Consumer = require('sqs-consumer');
-
-// DATABASE CONFIGURATION
 var mysql = require('mysql');
+var socketList = [];
 var connection = mysql.createConnection({
     host: 'tweetmap.cpxe94ty4ohx.us-east-1.rds.amazonaws.com',
     user: 'joyeeta',
     password: 'tweetmap',
     database: 'tweets'
 });
+var HashMap = require('hashmap');
 connection.connect(function(err) {
     if (err) console.log(err);
 });
 
-// TWITTER CONFIGURATION
-var Twitter = require('node-tweet-stream');
-trackItems = ["love", "hate", "happy", "fun", "mtvema", "family"];
-count = [0, 0, 0, 0, 0, 0];
-var socketList = [];
-var t = new Twitter({
-    consumer_key: 'AkE1t4fn5zDgcVOMUBjcT2pzM',
-    consumer_secret: 'vdB1cOrPCbyLtFGL9qaPWyB2uC6RKO5iAoPkSWf3Dx2ctTnjOx',
-    token: '3990273435-08DhKM6xhHnjk6zJGcshqKZaD2Re20zxI1TpC2y',
-    token_secret: 'SOxFfgLwicGFBnGNIH8nR2JcymKVWWpO5NmaFYz3jkOC8'
-});
-
-trackItems.forEach(function(item) {
-    t.track(item);
-});
-
-t.on('tweet', function(tweet) {
-    if (tweet.geo) {
-        keyword = null;
-        for (var i = 0; i < trackItems.length; i++) {
-            if (tweet.text.indexOf(trackItems[i]) > -1) {
-                keyword = trackItems[i];
-                count[i]++;
-                break;
-            }
-        }
-
-        if (keyword != null) {
-            socketList.forEach(function(socket) {
-                var temp = {
-                    ID: tweet.id,
-                    Name: tweet.user.name,
-                    Latitude: tweet.geo.coordinates[0],
-                    Longitude: tweet.geo.coordinates[1],
-                    Text: tweet.text,
-                    Keyword: keyword
-                };
-
-          
-                liveTweetIntoDB(temp);
-                liveTweetIntoQueue(temp);
-                //socket.emit('tweet', temp);
-                socket.emit('trends',data1, data2);
-                getTweetFromQueue(socket,temp);
-            });
-
-        }
-    }
-});
-
-t.on('error', function(err) {
-    console.err('Oh no! Error occurred while getting tweets from the stream', err);
-});
-
-function liveTweetIntoDB(pass) {
-
-    connection.query('INSERT INTO DBtweets SET ?', pass, (err, result) => {
-        if (err) {
-            console.log('ERROR while inserting into DB!');
-        } else {
-            console.log('finished putting tweet in the DB: ', pass);
-        }
-    });
-}
-
-function liveTweetIntoQueue(temp) {
-    params.MessageBody =  JSON.stringify(temp);
-    console.log(" the queue: ",params.MessageBody);
-    sqs.sendMessage(params, (err, result) => {
-        if (err) {
-            console.log('Error while sending into the queue');
-        } else {
-            console.log('finished putting the tweet in the queue:', params.MessageBody);
-        }
-    });
-}
-
-function getTweetFromQueue(socket,temp) {
-    var app = Consumer.create({
-        queueUrl: queueURL,
-        region: awsRegion,
-        batchSize: 10,
-        handleMessage: function(message, done) {
-            //var temp = JSON.stringify(message.Body.Text);
-            var body = JSON.parse(message.Body);
-            console.log('Received from the queue:', body);
-            calculateSentiment(body.Text, body.ID,socket,temp);
-            return done();
-        }
-    });
-    app.on('error', function(err) {
-        console.log('Error occured while getting tweets from queue');
-    });
-    app.start();
-}
-
-// function removeFromQueue(message) {
-//     sqs.deleteMessage({
-//         QueueUrl: 'https://sqs.us-west-2.amazonaws.com/239427429364/TweetQueue',
-//         ReceiptHandle: message.ReceiptHandle
-//     }, function(err, data) {
-//         // If we errored, tell us that we did
-//         console.log('Remove From Queue');
-//     });
-// }
-
-function calculateSentiment(message, ID,socket,temp) {
-    alchemy.sentiment(message, {}, (err, result) => {
-        if (!err) {
-            console.log('sentiment is: ', result.docSentiment);
-            console.log(message);
-
-             sns.publish(snspublishParams, function(err, data) {
-                if (err) {
-                    console.log(" The error for SNS",err);
-                } else {
-                    console.log("SNS SUCCESS");
-                    var temper = {
-                    ID: temp.ID,
-                    Name: temp.Name,
-                    Latitude: temp.Latitude,
-                    Longitude: temp.Longitude,
-                    Text: temp.Text,
-                    Keyword: temp.Keyword,
-                    Sentiment: result.docSentiment
-                    };
-                    socket.emit('tweet',temper);
-                }
-                });
-            putSentimentintoDB(JSON.stringify(result.docSentiment), ID);
-            console.log('Hello');
-        }
-    });
-}
-
-function putSentimentintoDB(Sentiment, ID)
-{
-	var pass =  {
-                 ID: ID,
-                 Sentiment: Sentiment
-             	};
-	connection.query('INSERT INTO TweetSentiment SET ?', pass, (err, result) => {
-        if (err) {
-            console.log('ERROR while inserting into DBSentiment!');
-        } else {
-            console.log('finished putting tweet in the DBSentiment: ', pass);
-        }
-    });
-}
-
-function intialTweetsDB(io) {
+module.exports = function (io) {
 
     io.on('connection', function(socket) {
         socketList.push(socket);
         socket.emit('connectionSuccessful', "Connection Successful");
-        var queryString = 'SELECT * FROM DBtweets';
+        var queryString = 'SELECT * FROM Politics_2';
         connection.query(queryString, function(error, rows) {
             if (error) {
                 console.log('Oh no! Error occurred while getting tweets from the DataBase', error);
             } else {
-                socket.emit('initialTweets', rows);
+                //console.log(rows);
+                socket.emit('tweetsfromDB', rows);
+            }
+        });
+            var queryString1 = "SELECT * FROM Politics_3";
+            connection.query(queryString1, function(error, rows) {
+                if (error) {
+                    console.log(error);
+                } else {
+                
+                var very_light_users = 0;
+                var light_users = 0;
+                var medium_users = 0;
+                var heavy_users = 0;
+                var positive = 0;
+                var negative = 0;
+                var neutral = 0;
+                var total = 0;
+                for( var i = 0;i<rows.length;i++)
+                {
+                    if(rows[i].status_count_user<100)
+                        very_light_users++;
+                    else if(rows[i].status_count_user>100 && rows[i].status_count_user<2500)
+                        light_users++;
+                    else if(rows[i].status_count_user>2500 && rows[i].status_count_user<10000)
+                        medium_users++;
+                    else if(rows[i].status_count_user>10000)
+                        heavy_users++;
+                    if(JSON.parse(rows[i].sentiment)!=null)
+                    {
+                    if(JSON.parse(rows[i].sentiment).type == "positive")
+                        positive++;
+                    else if(JSON.parse(rows[i].sentiment).type == "negative")
+                        negative++;
+                    else if(JSON.parse(rows[i].sentiment).type == "neutral")
+                        neutral++;
+                    total++;
+                    }
+
+                }
+                console.log(very_light_users,",",light_users,",", medium_users,",",heavy_users, ",",rows.length);
+                console.log((very_light_users/rows.length)*100,(light_users/rows.length)*100,(medium_users/rows.length)*100,(heavy_users/rows.length)*100);
+                console.log(positive,negative,neutral, total);
+                console.log((positive/total)*100, (negative/total)*100 , (neutral/total)*100);  
+                    var temp = {
+                    average_very_light:(very_light_users/rows.length)*100,
+                    average_light:(light_users/rows.length)*100,
+                    average_medium:(medium_users/rows.length)*100,
+                    average_heavy:(heavy_users/rows.length)*100,
+                    average_sentiment_positive:(positive/total)*100,
+                    average_sentiment_negative:(negative/total)*100,
+                    average_sentiment_neutral:(neutral/total)*100,
+                    very_light:very_light_users,
+                    light:light_users,
+                    medium:medium_users,
+                    heavy:heavy_users,
+                    positive_key:positive,
+                    negative_key:negative,
+                    neutral_key:neutral
+                    };
+                    socket.emit('Sentiment_Users_No', temp);
+                
+                }
+            });
+            var confusion_matrix = new Array();
+
+for (i=0;i<5;i++) {
+ confusion_matrix[i]=new Array();
+ for (j=0;j<5;j++) {
+  confusion_matrix[i][j]=0;
+ }
+}
+
+var keyword = "Hillary Clinton";
+var queryString = "SELECT * FROM Politics_3 WHERE keyword ='" + keyword + "'";
+connection.query(queryString, function(error, rows) {
+            if (error) {
+                console.log('Oh no! Error occurred while getting tweets from the DataBase', error);
+            } else {
+                   var total = rows.length;
+                   var relation_hillary_bernie = 0;
+                    var relation_hillary_ted = 0;
+                    var relation_hillary_trump = 0;
+                    var relation_hillary_ben = 0;
+                   for(var i = 0;i<rows.length;i++)
+                   {
+                         var temp = rows[i];
+                        if(temp.text.toLowerCase().indexOf("bernie")> -1 || temp.text.toLowerCase().indexOf("sanders")> -1 )
+                        {
+                            
+                            relation_hillary_bernie++;
+                        }
+                        if(temp.text.toLowerCase().indexOf("ted")> -1|| temp.text.toLowerCase().indexOf("cruz")> -1)
+                        {
+                            relation_hillary_ted++;
+                        }
+                        if(temp.text.toLowerCase().indexOf("trump")> -1 || temp.text.toLowerCase().indexOf("donald")> -1)
+                        {
+                         
+                            relation_hillary_trump++;
+                        }
+                        if(temp.text.toLowerCase().indexOf("ben")> -1 || temp.text.toLowerCase().indexOf("carson")> -1)
+                        {
+                            relation_hillary_ben++;
+                        }
+                   } 
+                   console.log(relation_hillary_bernie, relation_hillary_ted,relation_hillary_trump, relation_hillary_ben, total); 
+                   confusion_matrix [1][0] = relation_hillary_trump;
+                    confusion_matrix [1][1] = total;
+                    confusion_matrix [1][2] = relation_hillary_bernie;
+                    confusion_matrix [1][3] = relation_hillary_ben;
+                    confusion_matrix [1][4] = relation_hillary_ted; 
+            }
+           });
+var keyword = "Donald Trump";
+var queryString = "SELECT * FROM Politics_3 WHERE keyword ='" + keyword + "'";
+connection.query(queryString, function(error, rows) {
+            if (error) {
+                console.log('Oh no! Error occurred while getting tweets from the DataBase', error);
+            } else {
+                var relation_trump_bernie = 0;
+                    var relation_trump_ted = 0;
+                    var relation_trump_hillary = 0;
+                    var relation_trump_ben = 0;
+                    var total = rows.length;
+                for (var i = 0;i<rows.length;i++)
+                {
+                        var temp = rows[i];
+                        if(temp.text.toLowerCase().indexOf("bernie")> -1 || temp.text.toLowerCase().indexOf("sanders")> -1 )
+                        {
+                           
+                            relation_trump_bernie++;
+                        }
+                        if(temp.text.toLowerCase().indexOf("ted")> -1|| temp.text.toLowerCase().indexOf("cruz")> -1)
+                        {
+                          
+                            relation_trump_ted++;
+                        }
+                        if(temp.text.toLowerCase().indexOf("hillary")> -1 || temp.text.toLowerCase().indexOf("clinton")> -1)
+                        {
+                           
+                            relation_trump_hillary++;
+                        }
+                        if(temp.text.toLowerCase().indexOf("ben")> -1 || temp.text.toLowerCase().indexOf("carson")> -1)
+                        {
+                            
+                            relation_trump_ben++;
+                        }
+                 
+                }
+                console.log(relation_trump_bernie, relation_trump_ted,relation_trump_hillary, relation_trump_ben, total);
+                confusion_matrix [0][0] = total;
+                confusion_matrix [0][1] = relation_trump_hillary;
+                confusion_matrix [0][2] = relation_trump_bernie;
+                confusion_matrix [0][3] = relation_trump_ben;
+                confusion_matrix [0][4] = relation_trump_ted;
+            }
+        });
+var keyword = "Bernie Sanders";
+var queryString = "SELECT * FROM Politics_3 WHERE keyword ='" + keyword + "'";
+connection.query(queryString, function(error, rows) {
+            if (error) {
+                console.log('Oh no! Error occurred while getting tweets from the DataBase', error);
+            } else {
+                var relation_bernie_hillary = 0;
+                    var relation_bernie_trump = 0;
+                    var relation_bernie_ted = 0;
+                    var relation_bernie_ben = 0;
+                    var total = rows.length;
+                for (var i = 0;i<rows.length;i++)
+                {
+                    var temp = rows[i];
+                        if(temp.text.toLowerCase().indexOf("trump")> -1 || temp.text.toLowerCase().indexOf("donald")> -1 )
+                        {
+                      
+                            relation_bernie_trump++;
+                        }
+                        if(temp.text.toLowerCase().indexOf("ted")> -1|| temp.text.toLowerCase().indexOf("cruz")> -1)
+                        {
+                     
+                            relation_bernie_ted++;
+                        }
+                        if(temp.text.toLowerCase().indexOf("hillary")> -1 || temp.text.toLowerCase().indexOf("clinton")> -1)
+                        {
+                        
+                            relation_bernie_hillary++;
+                        }
+                        if(temp.text.toLowerCase().indexOf("ben")> -1 || temp.text.toLowerCase().indexOf("carson")> -1)
+                        {
+                            
+                            relation_bernie_ben ++;
+                        }
+                }
+                console.log(relation_bernie_trump, relation_bernie_ted,relation_bernie_hillary, relation_bernie_ben, total);
+                confusion_matrix [2][0] = relation_bernie_trump;
+                confusion_matrix [2][1] = relation_bernie_hillary;
+                confusion_matrix [2][2] = total;
+                confusion_matrix [2][3] = relation_bernie_ben;
+                confusion_matrix [2][4] = relation_bernie_ted;
             }
         });
 
+var keyword = "Ben Carson";
+var queryString = "SELECT * FROM Politics_3 WHERE keyword ='" + keyword + "'";
+connection.query(queryString, function(error, rows) {
+            if (error) {
+                console.log('Oh no! Error occurred while getting tweets from the DataBase', error);
+            } else {
+                var relation_ben_hillary = 0;
+                    var relation_ben_trump = 0;
+                    var relation_ben_ted = 0;
+                    var relation_ben_bernie = 0;
+                    var total = rows.length;
+                for (var i = 0;i<rows.length;i++)
+                {
+                        var temp = rows[i];
+                        if(temp.text.toLowerCase().indexOf("trump")> -1 || temp.text.toLowerCase().indexOf("donald")> -1 )
+                        {
+                       
+                            relation_ben_trump++;
+                        }
+                        if(temp.text.toLowerCase().indexOf("ted")> -1|| temp.text.toLowerCase().indexOf("cruz")> -1)
+                        {
+                          
+                            relation_ben_ted++;
+                        }
+                        if(temp.text.toLowerCase().indexOf("hillary")> -1 || temp.text.toLowerCase().indexOf("clinton")> -1)
+                        {
+                         
+                            relation_ben_hillary ++;
+                        }
+                        if(temp.text.toLowerCase().indexOf("bernie")> -1 || temp.text.toLowerCase().indexOf("sanders")> -1)
+                        {
+                           
+                            relation_ben_bernie ++;
+                        }
+                }
+                console.log(relation_ben_trump, relation_ben_ted,relation_ben_hillary, relation_ben_bernie, total);
+                confusion_matrix [3][0] = relation_ben_trump;
+                confusion_matrix [3][1] = relation_ben_hillary;
+                confusion_matrix [3][2] = relation_ben_bernie;
+                confusion_matrix [3][3] = total;
+                confusion_matrix [3][4] = relation_ben_ted;
+            }
+        });
 
-        socket.on('initialTweetsByKeyword', function(Keyword) {
+var keyword = "Ted Cruz";
+var queryString = "SELECT * FROM Politics_3 WHERE keyword ='" + keyword + "'";
+connection.query(queryString, function(error, rows) {
+            if (error) {
+                console.log('Oh no! Error occurred while getting tweets from the DataBase', error);
+            } else {
+                var relation_ted_hillary = 0;
+                    var relation_ted_trump = 0;
+                    var relation_ted_ben = 0;
+                    var relation_ted_bernie = 0;
+              
+                    var total = rows.length;
+                for (var i = 0;i<rows.length;i++)
+                {
+                    
+                        var temp = rows[i];
+                        if(temp.text.toLowerCase().indexOf("trump")> -1 || temp.text.toLowerCase().indexOf("donald")> -1 )
+                        {
+                     
+                            relation_ted_trump++;
+                        }
+                        if(temp.text.toLowerCase().indexOf("ben")> -1|| temp.text.toLowerCase().indexOf("carson")> -1)
+                        {
+                        
+                            relation_ted_ben++;
+                        }
+                        if(temp.text.toLowerCase().indexOf("hillary")> -1 || temp.text.toLowerCase().indexOf("clinton")> -1)
+                        {
+                       
+                            relation_ted_hillary ++;
+                        }
+                        if(temp.text.toLowerCase().indexOf("bernie")> -1 || temp.text.toLowerCase().indexOf("sanders")> -1)
+                        {
+                          
+                            relation_ted_bernie ++;
+                        }
+                  
+                }
+                console.log(relation_ted_trump, relation_ted_ben,relation_ted_hillary, relation_ted_bernie, total);
+                confusion_matrix [4][0] = relation_ted_trump;
+                confusion_matrix [4][1] = relation_ted_hillary;
+                confusion_matrix [4][2] = relation_ted_bernie;
+                confusion_matrix [4][3] = relation_ted_ben;
+                confusion_matrix [4][4] = total;
+            }
+            console.log(confusion_matrix);
+            var nodes = [];
+            var graphing = [];
+            var names = ["Hillary Clinton", "Donald Trump", "Bernie Sanders", "Ben Carson", "Ted Cruz"]
+            for (var i = 0;i<confusion_matrix.length;i++)
+            {
+                nodes.push({"name":names[i],"group": i});
+            }
+            //console.log(nodes);
+            var links = [];
+            for(var i = 0;i<confusion_matrix.length;i++)
+            {
+                for(var j = 0;j<confusion_matrix.length;j++)
+                {
+                    if(i!=j)
+                    {
+                    links.push({"source":i,"target": j,"value":confusion_matrix [i][j]});
+                    }
+                }
+            }
+            var temp = {"nodes": nodes,"links": links};
+            console.log(temp);
+            socket.emit('Graph',temp);
+        });
+
+        socket.on('initialTweetsByKeyword', function(keyword) {
+            console.log(keyword);
             var queryString;
             if (keyword == "") {
-                queryString = "SELECT * FROM DBtweets";
+                queryString = "SELECT * FROM Politics_2";
             } else {
-                queryString = "SELECT * FROM DBtweets WHERE Keyword ='" + Keyword + "'";
+                queryString = "SELECT * FROM Politics_2 WHERE keyword ='" + keyword + "'";
             }
 
             connection.query(queryString, function(error, rows) {
                 if (error) {
                     console.log(error);
                 } else {
-
+                    //console.log(rows);
                     socket.emit('initialTweetsByKeyword', rows);
                 }
             });
         });
+        
+        socket.on('HashTagsByKeyword',function(keyword){
+            console.log(keyword);
+            var queryString;
+            if (keyword == "") {
+                queryString = "SELECT * FROM Politics_3";
+            } else {
+                queryString = "SELECT * FROM Politics_3 WHERE keyword ='" + keyword + "'";
+            }
+            connection.query(queryString, function(error, rows) {
+            if (error) {
+                console.log('Oh no! Error occurred while getting tweets from the DataBase', error);
+            } else {
+                var map = new HashMap();
+                for (var i = 0;i<rows.length;i++)
+                {
+                    if(rows[i].hashtags!="[]")
+                    {
+                    var temps = JSON.parse(rows[i].hashtags);
+                    temps.forEach(function(temp){
+                        if(map.has(temp.text.toLowerCase()))
+                        {
+                            map.set(temp.text.toLowerCase(), map.get(temp.text.toLowerCase())+1);
+                        }
+                        else
+                        {
+                            map.set(temp.text.toLowerCase(),1);
+                        }
+                    });
+                }
+                }
+                var data = [];
+                map.forEach(function(value, key) {
+                        data.push([key,value]);
+                        });
+                data.sort(function(a, b) { return a[1] < b[1] ? 1 : a[1] > b[1] ? -1 : 0 });
+                var points = [];
+                for (var i = 0;i < data.length;i++)
+                {
+                    var str1 ="#";
+                    if(data[i][1]>12)
+                    {
+                        points.push({"text": str1.concat(data[i][0]), "size" : 3*data[i][1]});
+                    }
+                    else if(data[i][1]>1 && data[i][1]<12)
+                    {
+                        points.push({"text": str1.concat(data[i][0]), "size" : 6*data[i][1]});
+                    }
+                    
+                }
+                socket.emit('HashTagsByKeyword',points);
+            }
+        });
 
-    });
+        });
+
+        socket.on('Sentiment_Users',function(keyword){
+            console.log(keyword);
+            var queryString;
+            if (keyword == "") {
+                queryString = "SELECT * FROM Politics_3";
+            } else {
+                queryString = "SELECT * FROM Politics_3 WHERE keyword ='" + keyword + "'";
+            }
+
+            connection.query(queryString, function(error, rows) {
+                if (error) {
+                    console.log(error);
+                } else {
+                
+                var very_light_users = 0;
+                var light_users = 0;
+                var medium_users = 0;
+                var heavy_users = 0;
+                var positive = 0;
+                var negative = 0;
+                var neutral = 0;
+                var total = 0;
+                for( var i = 0;i<rows.length;i++)
+                {
+                    if(rows[i].status_count_user<100)
+                        very_light_users++;
+                    else if(rows[i].status_count_user>100 && rows[i].status_count_user<2500)
+                        light_users++;
+                    else if(rows[i].status_count_user>2500 && rows[i].status_count_user<10000)
+                        medium_users++;
+                    else if(rows[i].status_count_user>10000)
+                        heavy_users++;
+                    if(JSON.parse(rows[i].sentiment)!=null)
+                    {
+                    if(JSON.parse(rows[i].sentiment).type == "positive")
+                        positive++;
+                    else if(JSON.parse(rows[i].sentiment).type == "negative")
+                        negative++;
+                    else if(JSON.parse(rows[i].sentiment).type == "neutral")
+                        neutral++;
+                    total++;
+                    }
+
+                }
+                console.log(very_light_users,",",light_users,",", medium_users,",",heavy_users, ",",rows.length);
+                console.log((very_light_users/rows.length)*100,(light_users/rows.length)*100,(medium_users/rows.length)*100,(heavy_users/rows.length)*100);
+                console.log(positive,negative,neutral, total);
+                console.log((positive/total)*100, (negative/total)*100 , (neutral/total)*100);  
+                    var temp = {
+                    average_very_light:(very_light_users/rows.length)*100,
+                    average_light:(light_users/rows.length)*100,
+                    average_medium:(medium_users/rows.length)*100,
+                    average_heavy:(heavy_users/rows.length)*100,
+                    average_sentiment_positive:(positive/total)*100,
+                    average_sentiment_negative:(negative/total)*100,
+                    average_sentiment_neutral:(neutral/total)*100,
+                    very_light:very_light_users,
+                    light:light_users,
+                    medium:medium_users,
+                    heavy:heavy_users,
+                    positive_key:positive,
+                    negative_key:negative,
+                    neutral_key:neutral
+                    };
+                    socket.emit('Sentiment_Users', temp);
+                }
+            });
+        });
+
+     });
+
 };
-
-module.exports.intialTweetsDB = intialTweetsDB;
- module.exports.liveTweetIntoQueue = liveTweetIntoQueue;
- module.exports.liveTweetIntoDB = liveTweetIntoDB;

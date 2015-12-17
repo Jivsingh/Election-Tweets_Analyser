@@ -32,27 +32,28 @@ var params = {
 };
 
 // TRACKING
-// HtrackItems = ['hillary clinton', 'hillary2016'];
-// var streamHillary = T.stream('statuses/filter', { track: HtrackItems })
+HtrackItems = ['hillary clinton','hillary2016'];
+var streamHillary = T.stream('statuses/filter', { track: HtrackItems })
 
-// streamHillary.on('tweet', function (tweet) {
+streamHillary.on('tweet', function (tweet) {
 
-//  	if(tweet.place!=null)
-//  	{
-//  		var temp ={
-// 		id: tweet.id,
-// 		name:tweet.user.name,
-// 		keyword: 'Hillary Clinton',
-// 		time:tweet.created_at,
-// 		text :tweet.text,
-// 		latitude: tweet.place.bounding_box.coordinates[0][0][0],
-// 		longitude: tweet.place.bounding_box.coordinates[0][0][1],
-// 		city: tweet.place.full_name
-// 		}
-// 		liveTweetIntoQueue(temp);
-//  	}
+ 	if(tweet.place!=null)
+ 	{
+ 		var temp ={
+		id: tweet.id,
+		name:tweet.user.name,
+		keyword: 'Hillary Clinton',
+		time:tweet.created_at,
+		text :tweet.text,
+		latitude: (tweet.place.bounding_box.coordinates[0][0][1]+ tweet.place.bounding_box.coordinates[0][1][1])/2.0,
+        longitude: (tweet.place.bounding_box.coordinates[0][0][0]+ tweet.place.bounding_box.coordinates[0][2][0])/2.0,
+		city: tweet.place.full_name
+		}
+		liveTweetIntoQueue(temp);
+ 	}
+    
 
-// });
+});
 
 // DtrackItems = ['donald trump','trump2016','trump'];
 // var streamDonald = T.stream('statuses/filter', { track: DtrackItems })
@@ -66,33 +67,33 @@ var params = {
 // 		keyword: 'Donald Trump',
 // 		time:tweet.created_at,
 // 		text :tweet.text,
-// 		latitude: tweet.place.bounding_box.coordinates[0][0][0],
-// 		longitude: tweet.place.bounding_box.coordinates[0][0][1],
+// 		latitude: (tweet.place.bounding_box.coordinates[0][0][1]+ tweet.place.bounding_box.coordinates[0][1][1])/2.0,
+        // longitude: (tweet.place.bounding_box.coordinates[0][0][0]+ tweet.place.bounding_box.coordinates[0][2][0])/2.0,
 // 		city: tweet.place.full_name
 // 		}
 // 		liveTweetIntoQueue(temp);
 //  	}
 // });
 
-BtrackItems = ['ben carson','carson2016', 'RealBenCarson'];
-var streamBCarson = T.stream('statuses/filter', { track: BtrackItems })
+// BtrackItems = ['ben carson','carson2016', 'RealBenCarson'];
+// var streamBCarson = T.stream('statuses/filter', { track: BtrackItems })
 
-streamBCarson.on('tweet', function (tweet) {	
-	if(tweet.place!=null)
- 	{
- 		var temp ={
-		id: tweet.id,
-		name:tweet.user.name,
-		keyword: 'Ben Carson',
-		time:tweet.created_at,
-		text :tweet.text,
-		latitude: tweet.place.bounding_box.coordinates[0][0][0],
-		longitude: tweet.place.bounding_box.coordinates[0][0][1],
-		city: tweet.place.full_name
-		}
-		liveTweetIntoQueue(temp);
- 	}
-});
+// streamBCarson.on('tweet', function (tweet) {	
+// 	if(tweet.place!=null)
+//  	{
+//  		var temp ={
+// 		id: tweet.id,
+// 		name:tweet.user.name,
+// 		keyword: 'Ben Carson',
+// 		time:tweet.created_at,
+// 		text :tweet.text,
+// 		latitude: (tweet.place.bounding_box.coordinates[0][0][1]+ tweet.place.bounding_box.coordinates[0][1][1])/2.0,
+        // longitude: (tweet.place.bounding_box.coordinates[0][0][0]+ tweet.place.bounding_box.coordinates[0][2][0])/2.0,
+// 		city: tweet.place.full_name
+// 		}
+// 		liveTweetIntoQueue(temp);
+//  	}
+// });
 
 // StrackItems = ['bernie sanders','bernie2016'];
 // var streamBSanders = T.stream('statuses/filter', { track: StrackItems })
@@ -106,8 +107,8 @@ streamBCarson.on('tweet', function (tweet) {
 // 		keyword: 'Bernie Sanders',
 // 		time:tweet.created_at,
 // 		text :tweet.text,
-// 		latitude: tweet.place.bounding_box.coordinates[0][0][0],
-// 		longitude: tweet.place.bounding_box.coordinates[0][0][1],
+// 		latitude: (tweet.place.bounding_box.coordinates[0][0][1]+ tweet.place.bounding_box.coordinates[0][1][1])/2.0,
+        // longitude: (tweet.place.bounding_box.coordinates[0][0][0]+ tweet.place.bounding_box.coordinates[0][2][0])/2.0,
 // 		city: tweet.place.full_name
 // 		}
 // 		liveTweetIntoQueue(temp);
@@ -126,8 +127,8 @@ streamBCarson.on('tweet', function (tweet) {
 // 		keyword: 'Ted Cruz',
 // 		time:tweet.created_at,
 // 		text :tweet.text,
-// 		latitude: tweet.place.bounding_box.coordinates[0][0][0],
-// 		longitude: tweet.place.bounding_box.coordinates[0][0][1],
+// 		latitude: (tweet.place.bounding_box.coordinates[0][0][1]+ tweet.place.bounding_box.coordinates[0][1][1])/2.0,
+        // longitude: (tweet.place.bounding_box.coordinates[0][0][0]+ tweet.place.bounding_box.coordinates[0][2][0])/2.0,
 // 		city: tweet.place.full_name
 // 		}
 // 		liveTweetIntoQueue(temp);
