@@ -7,10 +7,10 @@
 var mysql = require('mysql');
 var HashMap = require('hashmap');
 var connection = mysql.createConnection({
-    host: 'tweetmap.cpxe94ty4ohx.us-east-1.rds.amazonaws.com',
-    user: 'joyeeta',
-    password: 'tweetmap',
-    database: 'tweets'
+    host: '',
+    user: '',
+    password: '',
+    database: ''
 });
 connection.connect(function(err) {
     if (err) console.log(err);

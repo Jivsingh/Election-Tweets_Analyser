@@ -6,10 +6,10 @@ var natural = require('natural'),
 
 var mysql = require('mysql');
 var connection = mysql.createConnection({
-    host: 'tweetmap.cpxe94ty4ohx.us-east-1.rds.amazonaws.com',
-    user: 'joyeeta',
-    password: 'tweetmap',
-    database: 'tweets'
+    host: '',
+    user: '',
+    password: '',
+    database: ''
 });
 connection.connect(function(err) {
     if (err) console.log(err);

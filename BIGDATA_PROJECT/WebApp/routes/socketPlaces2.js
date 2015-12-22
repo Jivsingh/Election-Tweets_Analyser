@@ -3,18 +3,18 @@ var Consumer = require('sqs-consumer');
 // DATABASE CONFIGURATION
 var mysql = require('mysql');
 var connection = mysql.createConnection({
-    host: 'tweetmap.cpxe94ty4ohx.us-east-1.rds.amazonaws.com',
-    user: 'joyeeta',
-    password: 'tweetmap',
-    database: 'tweets'
+    host: '',
+    user: '',
+    password: '',
+    database: ''
 });
 connection.connect(function(err) {
     if (err) console.log(err);
 });
 
 var aws = require('aws-sdk');
-var accessKeyId = 'AKIAJXXZENDMN4TCYO2A';
-var secretAccessKey = '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';
+var accessKeyId = '';
+var secretAccessKey = '';
 var awsRegion = 'us-west-2';
 
 // SQS CONFIGURATION
@@ -33,10 +33,10 @@ var params = {
     DelaySeconds: 0
 };
 
-var queueURL = 'https://sqs.us-west-2.amazonaws.com/239427429364/TweetPolitics';
+var queueURL = '';
 
 var alchemyAPI = require('alchemy-api');
-var alchemy = new alchemyAPI('a8143b4a4d3e7c19c92c90cac8232537a7b7c23c');
+var alchemy = new alchemyAPI('');
 
     var app = Consumer.create({
     queueUrl: queueURL,

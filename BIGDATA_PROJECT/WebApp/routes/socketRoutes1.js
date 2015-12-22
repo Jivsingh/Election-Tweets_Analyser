@@ -2,21 +2,21 @@
 // TWITTER CONFIGURATION
 var Twit = require('twit');
 var T = new Twit({
-    consumer_key: 'AkE1t4fn5zDgcVOMUBjcT2pzM', 
-    consumer_secret: 'vdB1cOrPCbyLtFGL9qaPWyB2uC6RKO5iAoPkSWf3Dx2ctTnjOx',
-    access_token:'3990273435-08DhKM6xhHnjk6zJGcshqKZaD2Re20zxI1TpC2y',
-    access_token_secret: 'SOxFfgLwicGFBnGNIH8nR2JcymKVWWpO5NmaFYz3jkOC8'
+    consumer_key: '', 
+    consumer_secret: '',
+    access_token:'',
+    access_token_secret: ''
 });
 
 // AWS CONFIGURATION
 var aws = require('aws-sdk');
-var accessKeyId = 'AKIAJXXZENDMN4TCYO2A';
-var secretAccessKey = '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';
+var accessKeyId = '';
+var secretAccessKey = '';
 var awsRegion = 'us-west-2';
 
 // SQS CONFIGURATION
 var sqs;
-var queueURL = 'https://sqs.us-west-2.amazonaws.com/239427429364/Others';
+var queueURL = '';
 
 // AWS
 aws.config.update({

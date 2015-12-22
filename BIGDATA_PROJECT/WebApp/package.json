@@ -17,6 +17,7 @@
     "async": "^1.5.0",
     "aws-sdk": "^2.2.18",
     "aws-snsclient": "^0.2.0",
+    "aylien_textapi": "^0.5.0",
     "body-parser": "^1.14.1",
     "browserify": "^12.0.1",
     "express": "^4.13.3",

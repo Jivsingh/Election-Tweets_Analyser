@@ -1,5 +1,5 @@
 var alchemyAPI = require('alchemy-api');
-var alchemy = new alchemyAPI('c6e0f03b20fe21edf6a0dbfd1380f91fd82b157e');
+var alchemy = new alchemyAPI('');
 //var text = 'A quarter of a million have signed the Trump petition. What a lovely democratic dilemma. Thanks all. https://t.co/IWE3CnSB04';
 var google = require('google');
 
